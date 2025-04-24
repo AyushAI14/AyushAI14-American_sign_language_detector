@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Language Recognition</title>
+</head>
+<style>
+    body {
+        background-color: white;
+        color: black;
+    }
+
+    img#img-logo {
+        width: 116px;
+        border: 2px solid transparent;
+        border-radius: 39px;
+
+    }
+
+    img#img-sign {
+        width: 450px;
+    }
+
+    div.left {
+        position: absolute;
+        left: 50px;
+    }
+
+    .btn {
+        padding: 11px 11px;
+        border: none;
+
+        border-radius: 11px;
+    }
+
+    div.right {
+        position: absolute;
+        right: 220px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-content: center;
+        top: 100px;
+    }
+
+    #imageResults {
+        font-size: 25px;
+        color: green;
+    }
+</style>
+
+<body>
+    <div class="left">
+        <img src="img/Gesture-x.png" alt="" id="img-logo">
+        <div>
+            <img src="img/sign.jpeg" alt="" id="img-sign">
+        </div>
+    </div>
+    <div class="right">
+        <!-- Image Upload Section -->
+        <h2 style="font-size: 43px;">Upload Images</h2>
+
+        <form id="uploadForm" enctype="multipart/form-data">
+            <input type="file" id="imageUpload" name="files" multiple accept="image/*" class="btn">
+            <button type="button" onclick="uploadImages()" class="btn">Upload</button>
+        </form>
+        <div id="imageResults">Result : </div>
+
+
+        <!-- Video Section -->
+        <h2>Real-time Video Prediction</h2>
+        <video id="videoFeed" style="display: none;"></video>
+        <p id="videoPrediction"></p>
+
+
+    </div>
+
+
+
+    <script>
+        let videoStream;
+
+        // Image Upload Function
+        async function uploadImages() {
+            try {
+                const formData = new FormData(document.getElementById('uploadForm'));
+                const response = await fetch('http://localhost:8000/predict/', {  // Use full URL
+                    method: 'POST',
+                    body: formData
+                });
+
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const result = await response.json();
+                document.getElementById('imageResults').innerText = 'Letter: ' + result.predictions.join(', ');
+            } catch (error) {
+                console.error('Error uploading images:', error);
+                document.getElementById('imageResults').innerText = 'Error uploading images';
+            }
+        }
+
+
+
+
+        const ws = new WebSocket('ws://localhost:8000/ws/predict/');
+        ws.onmessage = function (event) {
+            document.getElementById('videoPrediction').innerText = event.data;
+        };
+    </script>
+</body>
+
+</html>
